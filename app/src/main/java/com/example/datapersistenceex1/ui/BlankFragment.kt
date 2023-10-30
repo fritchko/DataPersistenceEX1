@@ -10,7 +10,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.datapersistenceex1.databinding.FragmentBlankBinding
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class BlankFragment : Fragment() {
 
@@ -47,17 +51,17 @@ class BlankFragment : Fragment() {
 
     private fun observeData() {
 
-        factViewModel.isLoading.observe(viewLifecycleOwner) {
-            binding.progressBar.isVisible = it
-        }
+        factViewModel.isLoading.onEach { binding.progressBar.isVisible = it }
+            .launchIn(lifecycleScope)
 
-        factViewModel.result.observe(viewLifecycleOwner) {
-            if (it != null) {
-                binding.factLength.text = "Fact no. ${it.length}"
-                binding.factText.text = it.fact
-                saveFact(requireContext(),it.fact)
+        factViewModel.result
+            .onEach { fact ->
+                if (fact != null){
+                    binding.factLength.text = "Fact no. ${fact.length}"
+                    binding.factText.text = fact.fact
+                    saveFact(requireContext(), fact.fact)
+                }
             }
-        }
     }
 
     override fun onDestroyView() {
